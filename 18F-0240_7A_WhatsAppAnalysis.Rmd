@@ -1,0 +1,124 @@
+---
+title: "18F-0240_7A_WhatsAppChatAnalysis"
+author: "18F-0240"
+date: "12/7/2021"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+Github Link: "https://github.com/HuzaifahZia/WhatsApp-Chat-Analysis.git"
+
+## WhatsApp Chat Analysis
+
+```{r}
+library("dplyr")
+library("rwhatsapp")
+library("tidyr")
+library(qdap)
+library(stringr)
+library(ggplot2)
+library(scales)
+library(collections)
+library(emoji)
+```
+## Reading chat file using rwhatsapp package
+Filtering rows where author is na(not applicable)
+
+```{r}
+history <- system.file("extdata","Abdullah.txt", package = "rwhatsapp")
+chat <- rwa_read(history)%>% 
+  filter(!is.na(author)) # remove messages without author
+chat
+```
+#seeing how many messages where done in the group
+```{r}
+messages<- nrow(chat)
+messages
+```
+## making a table of emojis sent by a person and who many time he/she sent it.
+## suming up all the emojis sent
+```{r}
+emt<- chat %>% unnest(emoji) %>% count(author,emoji, sort= TRUE) %>%   group_by(author) 
+emojis <- sum(emt$n)
+emojis
+```
+```{r}
+media<- sum(chat$text=='<Media omitted>')
+media
+```
+
+
+##extracting how many urls have been sent
+
+```{r}
+url_pattern <- "http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\\(\\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+"
+df<- str_extract(chat$text, url_pattern)
+df<- df[!is.na(df)]
+links <- length(df)
+print('Chats between Huzaifah and Abdullah')
+print(paste("Total Messages: ",messages))
+print(paste("Number of Media Shared: ", media))
+print(paste("Number of Emojis Shared: ", emojis))
+print(paste("Number of Links Shared: ", links))
+```
+
+## Analyzing data Author wises data
+using qdap we can retrieve word count of each text
+
+```{r}
+huzaifah <- chat[which(chat$author == "Huzaifah Zia"),]
+huzaifahsent <- nrow(huzaifah)
+
+huzaifahavgsent <- wc(huzaifah[which(huzaifah$text != '<Media omitted>'),], FALSE)/huzaifahsent
+
+huzaifahmedia<- nrow(huzaifah[which(huzaifah$text != '<Media omitted>'),])
+
+huzaifahemt<- huzaifah %>% unnest(emoji) %>% count(emoji, sort= TRUE) 
+huzaifahemojis <- sum(huzaifahemt$n)
+
+df1<- str_extract(huzaifah$text, url_pattern)
+df1<- df1[!is.na(df1)]
+huzaifahlinks <- length(df1)
+
+print('Stats of Huzaifah -')
+print(paste("Total Messages: ",huzaifahsent))
+print(paste("Average words per message: ", huzaifahavgsent))
+print(paste("Number of Media Shared: ", huzaifahmedia))
+print(paste("Number of Emojis Shared: ", huzaifahemojis))
+print(paste("Number of Links Shared: ", huzaifahlinks))
+
+abdullah <- chat[which(chat$author == "Abdullah (B)"),]
+abdullahsent <- nrow(abdullah)
+
+abdullahavgsent <- wc(abdullah[which(abdullah$text != '<Media omitted>'),], FALSE)/abdullahsent
+
+abdullahmedia<- nrow(abdullah[which(abdullah$text != '<Media omitted>'),])
+
+abdullahemt<- abdullah %>% unnest(emoji) %>% count(emoji, sort= TRUE) 
+abdullahemojis <- sum(abdullahemt$n)
+
+df2<- str_extract(abdullah$text, url_pattern)
+df2<- df2[!is.na(df2)]
+abdullahlinks <- length(df2)
+
+print('Stats of Huzaifah -')
+print(paste("Total Messages: ",abdullahsent))
+print(paste("Average words per message: ", abdullahavgsent))
+print(paste("Number of Media Shared: ", abdullahmedia))
+print(paste("Number of Emojis Shared: ", abdullahemojis))
+print(paste("Number of Links Shared: ", abdullahlinks))
+```
+
+```{r}
+
+```
+
