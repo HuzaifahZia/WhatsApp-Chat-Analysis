@@ -27,8 +27,11 @@ library(qdap)
 library(stringr)
 library(ggplot2)
 library(scales)
-library(collections)
+library(wordcloud)
+library(wordcloud2)
+library(RColorBrewer)
 library(emoji)
+library("tidytext")
 ```
 ## Reading chat file using rwhatsapp package
 Filtering rows where author is na(not applicable)
@@ -37,7 +40,7 @@ Filtering rows where author is na(not applicable)
 history <- system.file("extdata","Abdullah.txt", package = "rwhatsapp")
 chat <- rwa_read(history)%>% 
   filter(!is.na(author)) # remove messages without author
-chat
+head(chat,20)
 ```
 #seeing how many messages where done in the group
 ```{r}
@@ -119,6 +122,48 @@ print(paste("Number of Links Shared: ", abdullahlinks))
 ```
 
 ```{r}
+  emt1<- chat %>% unnest(emoji) %>% count(emoji, sort= TRUE) 
+  emt1 <- head(emt1,20)
 
+  ggplot(emt1, aes(x = emoji, y = n, fill = emoji),alpha = 0.8) +
+  geom_col() +
+  coord_polar(theta = "y")
+```
+
+```{r}
+chat1 <- chat[which(chat$text != '<Media omitted>'),]
+chat1<-chat1 %>%
+  unnest_tokens(input = text,
+                output = word) %>%
+  count(word, sort = TRUE)
+
+set.seed(1234) # for reproducibility 
+wordcloud(words = chat1$word, freq = chat1$n, min.freq = 1,           max.words=2000, random.order=FALSE, rot.per=0.35,            colors=brewer.pal(8, "Dark2"))
+
+```
+
+```{r}
+chat2 <- chat[which(chat$text != '<Media omitted>'& chat$author == "Huzaifah Zia"),]
+chat2<-chat2 %>%
+  unnest_tokens(input = text,
+                output = word) %>%
+  count(word, sort = TRUE)
+
+print("Authr Name Huzaifah")
+set.seed(1234) # for reproducibility 
+wordcloud2(data=chat2, size= 1.6, color=brewer.pal(8, "Dark2"))
+
+```
+
+```{r}
+chat3 <- chat[which(chat$text != '<Media omitted>'& chat$author == "Abdullah (B)"),]
+chat3<-chat3 %>%
+  unnest_tokens(input = text,
+                output = word) %>%
+  count(word, sort = TRUE)
+
+print("Authr Name Abdullah")
+set.seed(1234) # for reproducibility 
+wordcloud2(data=chat3, size= 1.6, color=brewer.pal(8, "Dark2"))
 ```
 
